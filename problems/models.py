@@ -10,8 +10,8 @@ class Problem(models.Model):
     difficulty = models.CharField(choices=DIFFICULTY_CHOICES, max_length=10)
     question_html = models.TextField()
     solution_html = models.TextField()
-    tags = models.ManyToManyField('Tag')
-    companies = models.ManyToManyField('Company')
+    tags = models.ManyToManyField('Tag', blank=True)
+    companies = models.ManyToManyField('Company', blank=True)
 
     def __str__(self):
         return self.name
