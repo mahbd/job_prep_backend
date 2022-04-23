@@ -5,7 +5,6 @@ from pathlib import Path
 
 from djongo.base import DatabaseWrapper
 from djongo.operations import DatabaseOperations
-import django_heroku
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv('SECRET_KEY', 'Nothing-Set-For-Now')
