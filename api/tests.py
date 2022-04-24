@@ -8,6 +8,7 @@ from problems.models import Problem, Tag, Company, Status
 c = Client()
 
 
+# noinspection DuplicatedCode
 class ProblemAPITestCase(TestCase):
     def setUp(self):
         self.problem1 = Problem.objects.create(
@@ -33,6 +34,8 @@ class ProblemAPITestCase(TestCase):
             password='testpassword',
             is_staff=True,
         )
+        self.company1 = Company.objects.create(name='Test Company 1')
+        self.company2 = Company.objects.create(name='Test Company 2')
         self.base_url = reverse('api:problems-list')
 
     def test_problem_creation_ann(self):
@@ -68,6 +71,21 @@ class ProblemAPITestCase(TestCase):
         self.assertEqual(res.status_code, 201, res.json())
         # check number of problems
         self.assertEqual(Problem.objects.count(), 3)
+
+    def test_problem_creation_staff_with_companies(self):
+        c.force_login(self.staff)
+        res = c.post(self.base_url, {
+            'name': 'Test Problem 3',
+            'acceptance': 0.99,
+            'difficulty': DIFFICULTY_CHOICES[0][0],
+            'question_html': '<p>Test Question 3</p>',
+            'solution_html': '<p>Test Solution 3</p>',
+            'companies': [self.company1.id, self.company2.id],
+        }, content_type='application/json')
+        self.assertEqual(res.status_code, 201, res.json())
+        self.assertEqual(Problem.objects.count(), 3)
+        # check number of companies
+        self.assertEqual(Problem.objects.get(id=res.json()['id']).companies.count(), 2)
 
     def test_problem_creation_staff_invalid_data(self):
         c.force_login(self.staff)

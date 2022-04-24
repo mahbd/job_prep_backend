@@ -6,7 +6,6 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
@@ -32,7 +31,8 @@ class Migration(migrations.Migration):
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(max_length=1023)),
                 ('acceptance', models.DecimalField(decimal_places=2, max_digits=3)),
-                ('difficulty', models.CharField(choices=[('easy', 'Easy'), ('medium', 'Medium'), ('hard', 'Hard')], max_length=10)),
+                ('difficulty',
+                 models.CharField(choices=[('easy', 'Easy'), ('medium', 'Medium'), ('hard', 'Hard')], max_length=10)),
                 ('question_html', models.TextField()),
                 ('solution_html', models.TextField()),
                 ('companies', models.ManyToManyField(to='problems.company')),
@@ -59,7 +59,10 @@ class Migration(migrations.Migration):
             name='Status',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('status', models.CharField(choices=[('unread', 'Unread'), ('read', 'Read'), ('solved_easy', 'Solved Easily'), ('solved_medium', 'Solved Medium'), ('solved_hard', 'Solved Hard'), ('solved_tutorial', 'Solved Using Tutorial')], default='unread', max_length=20)),
+                ('status', models.CharField(
+                    choices=[('unread', 'Unread'), ('read', 'Read'), ('solved_easy', 'Solved Easily'),
+                             ('solved_medium', 'Solved Medium'), ('solved_hard', 'Solved Hard'),
+                             ('solved_tutorial', 'Solved Using Tutorial')], default='unread', max_length=20)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('updated_at', models.DateTimeField(auto_now=True)),
                 ('problem', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='problems.problem')),
