@@ -4,8 +4,7 @@ from abc import ABC
 from datetime import timedelta
 
 from corsheaders.defaults import default_headers
-from djongo.base import DatabaseWrapper
-from djongo.operations import DatabaseOperations
+import django_heroku
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = os.getenv('SECRET_KEY', 'Nothing-Set-For-Now')
@@ -63,44 +62,17 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'job_prep.wsgi.application'
 
-
-# Patch MongoDB Database operations
-
-
-# noinspection PyAbstractClass
-class PatchedDatabaseOperations(DatabaseOperations):
-    def conditional_expression_supported_in_where_clause(self, database_type):
-        return False
-
-
-DatabaseWrapper.ops_class = PatchedDatabaseOperations
-
 DATABASES = {
     'default': {
-        'ENGINE': 'djongo',
+        'ENGINE': 'django.db.backends.postgresql',
         'ENFORCE_SCHEMA': False,
         'NAME': 'jp_db',
-        os.getenv('MONGO_JP', False) and
-        'CLIENT': {
-            'host': os.environ.get('MONGO_JP'),
-            'username': os.environ.get('MONGO_USERNAME'),
-            'password': os.environ.get('MONGO_PASSWORD'),
-            'authMechanism': 'SCRAM-SHA-1'
-        },
-        not os.environ.get('MONGO_JP', False) and
-        'CLIENT': {
-            'host': "mongodb://localhost:27017/jp_db"
-        }
+        'USER': 'mah',
+        'PASSWORD': '1234',
+        'HOST': '127.0.0.1',
+        'PORT': '5432',
     }
 }
-
-if 'test' in sys.argv:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'jp_db.sqlite3',
-        }
-    }
 
 AUTH_USER_MODEL = 'users.User'
 
@@ -173,3 +145,5 @@ CORS_ALLOW_HEADERS = list(default_headers) + [
     "Access-Control-Allow-Origin",
     "Authorization",
 ]
+
+django_heroku.settings(locals())

@@ -1,10 +1,11 @@
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets, permissions
+from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
 
-from problems.models import Problem, Tag, Company, Status
+from problems.models import Problem
 from users.models import User
-from .serializers import ProblemSerializer, TagSerializer, CompanySerializer, StatusSerializer, UserSerializer
+from .serializers import ProblemSerializer, UserSerializer
 
 
 class IsAdminUserOrReadOnly(permissions.BasePermission):
@@ -12,11 +13,6 @@ class IsAdminUserOrReadOnly(permissions.BasePermission):
         if request.method in permissions.SAFE_METHODS:
             return True
         return request.user and request.user.is_staff
-
-
-class IsOwner(permissions.BasePermission):
-    def has_object_permission(self, request, view, obj):
-        return obj.user == request.user or request.user.is_staff
 
 
 class UserTablePermission(permissions.BasePermission):
@@ -29,58 +25,70 @@ class UserTablePermission(permissions.BasePermission):
         return request.user and request.user.is_authenticated and (request.user == obj or request.user.is_staff)
 
 
+# noinspection DuplicatedCode
 class ProblemViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows problems to be viewed or edited.
     """
+
+    def get_queryset(self):
+        problems = Problem.objects.all()
+        company = self.request.query_params.get('company')
+        tags = self.request.query_params.get('tags')
+        if company:
+            company = company.split(',')
+            problems = problems.filter(companies__overlap=company)
+        if tags:
+            tags = tags.split(',')
+            problems = problems.filter(tags__overlap=tags)
+        return problems
+
     queryset = Problem.objects.all()
     serializer_class = ProblemSerializer
     http_method_names = ['get', 'post', 'patch', 'delete']
     permission_classes = [IsAdminUserOrReadOnly]
-    filterset_fields = ('tags', 'difficulty', 'companies')
+    filterset_fields = ('difficulty',)
     search_fields = ('name', 'question_html')
-    filter_backends = (DjangoFilterBackend, SearchFilter)
+    filter_backends = (DjangoFilterBackend, SearchFilter,)
 
+    @action(detail=True, methods=['get'])
+    def mark_confident(self, request, pk):
+        pk = int(pk)
+        user = request.user
+        if pk not in user.confident_problems:
+            user.confident_problems.append(pk)
+        if pk in user.solved_problems:
+            user.solved_problems.remove(pk)
+        if pk in user.tried_problems:
+            user.solved_problems.remove(pk)
+        user.save()
+        return self.retrieve(request, pk)
 
-class TagViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint that allows tags to be viewed or edited.
-    """
-    queryset = Tag.objects.all()
-    serializer_class = TagSerializer
-    http_method_names = ['get', 'post', 'patch', 'delete']
-    permission_classes = [IsAdminUserOrReadOnly]
-    search_fields = ('name',)
-    filter_backends = (SearchFilter,)
+    @action(detail=True, methods=['get'])
+    def mark_solved(self, request, pk):
+        pk = int(pk)
+        user = request.user
+        if pk not in user.solved_problems:
+            user.solved_problems.append(pk)
+        if pk in user.confident_problems:
+            user.confident_problems.remove(pk)
+        if pk in user.tried_problems:
+            user.tried_problems.remove(pk)
+        user.save()
+        return self.retrieve(request, pk)
 
-
-class CompanyViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint that allows companies to be viewed or edited.
-    """
-    queryset = Company.objects.all()
-    serializer_class = CompanySerializer
-    http_method_names = ['get', 'post', 'patch', 'delete']
-    permission_classes = [IsAdminUserOrReadOnly]
-    search_fields = ('name',)
-    filter_backends = (SearchFilter,)
-
-
-class StatusViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint that allows statuses to be viewed or edited.
-    """
-
-    def get_queryset(self):
-        if self.request.user.is_staff:
-            return Status.objects.all()
-        return Status.objects.filter(user=self.request.user)
-
-    serializer_class = StatusSerializer
-    http_method_names = ['get', 'post', 'patch', 'delete']
-    permission_classes = [permissions.IsAuthenticated, IsOwner]
-    search_fields = ('name',)
-    filter_backends = (SearchFilter,)
+    @action(detail=True, methods=['get'])
+    def mark_tried(self, request, pk):
+        pk = int(pk)
+        user = request.user
+        if pk not in list(user.tried_problems):
+            user.tried_problems.append(pk)
+        if pk in user.confident_problems:
+            user.confident_problems.remove(pk)
+        if pk in user.solved_problems:
+            user.solved_problems.remove(pk)
+        user.save()
+        return self.retrieve(request, pk)
 
 
 class UserViewSet(viewsets.ModelViewSet):
