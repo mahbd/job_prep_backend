@@ -3,7 +3,8 @@ from rest_framework import viewsets, permissions
 from rest_framework.filters import SearchFilter
 
 from problems.models import Problem, Tag, Company, Status
-from .serializers import ProblemSerializer, TagSerializer, CompanySerializer, StatusSerializer
+from users.models import User
+from .serializers import ProblemSerializer, TagSerializer, CompanySerializer, StatusSerializer, UserSerializer
 
 
 class IsAdminUserOrReadOnly(permissions.BasePermission):
@@ -16,6 +17,16 @@ class IsAdminUserOrReadOnly(permissions.BasePermission):
 class IsOwner(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         return obj.user == request.user or request.user.is_staff
+
+
+class UserTablePermission(permissions.BasePermission):
+    def has_permission(self, request, view):
+        if request.method == 'POST':
+            return True
+        return request.user and request.user.is_staff
+
+    def has_object_permission(self, request, view, obj):
+        return request.user and request.user.is_authenticated and (request.user == obj or request.user.is_staff)
 
 
 class ProblemViewSet(viewsets.ModelViewSet):
@@ -70,3 +81,16 @@ class StatusViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated, IsOwner]
     search_fields = ('name',)
     filter_backends = (SearchFilter,)
+
+
+class UserViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows users to be viewed or edited.
+    """
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    http_method_names = ['get', 'post', 'patch', 'delete']
+    permission_classes = [UserTablePermission]
+    search_fields = ('username', 'email')
+    filterset_fields = ('is_staff', 'is_superuser', 'is_active', 'date_joined', 'last_login')
+    filter_backends = (SearchFilter, DjangoFilterBackend)
