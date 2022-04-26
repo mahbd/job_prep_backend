@@ -1,6 +1,7 @@
+import os
+
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.core.paginator import Paginator
-from django.db.models import F, Value, Case, When
+from django.db.models import Value, Case, When
 from django.shortcuts import redirect
 from django.views.generic import ListView, DetailView
 
@@ -28,7 +29,7 @@ class ProblemListView(LoginRequiredMixin, ListView):
         context['company'] = self.request.GET.get('company')
         return context
 
-    paginate_by = 20
+    paginate_by = os.getenv('PROBLEMS_PER_PAGE', 10)
 
 
 class ProblemDetailView(LoginRequiredMixin, DetailView):
