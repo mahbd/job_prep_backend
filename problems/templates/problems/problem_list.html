@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block title %}Problem List{% endblock title %}
+{% block content %}
+    <div class="container">
+        {% for company in companies %}
+            <a href="?company={{ company }}">{{ company }}</a>
+        {% endfor %}
+        <h1>Problem List</h1>
+        {% for problem in problem_list %}
+            <div class="card {% if problem.status == 'Tried' %} bg-danger {% elif problem.status == 'Confident' %} bg-success {% elif problem.status == 'Solved' %} bg-primary {% endif %}">
+                <div class="card-title">
+                    <a href="{% url 'problems:problem_detail' problem.id %}">
+                        {{ problem.name }}
+                    </a>
+                    <br>
+                    {{ problem.difficulty }}
+                </div>
+                <div class="card-body">
+                    {{ problem.question_html|safe|truncatechars_html:200 }}
+                </div>
+            </div>
+            <br><br><br>
+        {% endfor %}
+        <div class="pagination">
+    <span class="step-links">
+        {% if page_obj.has_previous and company %}
+            <a href="?page=1&company={{ company }}">&laquo; first</a>
+            <a href="?page={{ page_obj.previous_page_number }}&company={{ company }}">previous</a>
+        {% elif page_obj.has_previous %}
+            <a href="?page=1">&laquo; first</a>
+            <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+        {% endif %}
+
+        <span class="current">
+            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+        </span>
+
+        {% if page_obj.has_next and company %}
+            <a href="?page={{ page_obj.next_page_number }}&company={{ company }}">next</a>
+            <a href="?page={{ page_obj.paginator.num_pages }}&company={{ company }}">last &raquo;</a>
+        {% elif page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}">next</a>
+            <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
+        {% endif %}
+    </span>
+        </div>
+    </div>
+{% endblock content %}

@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% block title %}Problem List{% endblock title %}
+{% block content %}
+    <div class="container">
+        <a href="{% url 'problems:problem_list' %}">Home</a>
+        <a href="{% url 'problems:mark_problem' problem.id 'confident' %}">Mark Confident</a>
+        <a href="{% url 'problems:mark_problem' problem.id 'solved' %}">Mark Solved</a>
+        <a href="{% url 'problems:mark_problem' problem.id 'tried' %}">Mark Tried</a>
+        {{ problem.status }}
+        <h1 class="{% if problem.status == 'Tried' %} bg-danger {% elif problem.status == 'Confident' %} bg-success {% elif problem.status == 'Solved' %} bg-primary {% endif %}">{{ problem.name }}</h1>
+        {{ problem.question_html|safe }}
+    </div>
+{% endblock content %}
