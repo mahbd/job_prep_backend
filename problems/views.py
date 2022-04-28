@@ -1,7 +1,9 @@
 import os
 
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Value, Case, When
+from django.http import HttpResponse
 from django.shortcuts import redirect
 from django.views.generic import ListView, DetailView
 
@@ -55,4 +57,12 @@ def mark_problem(request, pk, mark):
     elif mark == 'tried':
         user.tried_problems.append(pk)
     user.save()
+    return redirect('problems:problem_detail', pk=pk)
+
+
+# @login_required
+def add_problem_link(request, pk):
+    problem = Problem.objects.get(pk=pk)
+    problem.problem_link = request.POST.get('problem_link')
+    problem.save()
     return redirect('problems:problem_detail', pk=pk)

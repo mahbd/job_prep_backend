@@ -11,6 +11,7 @@ class Problem(models.Model):
     difficulty = models.CharField(choices=DIFFICULTY_CHOICES, max_length=10)
     question_html = models.TextField()
     solution_html = models.TextField()
+    problem_link = models.URLField(max_length=1023, blank=True, null=True)
     tags = ArrayField(models.CharField(max_length=1023), default=list)
     companies = ArrayField(models.CharField(max_length=1023), default=list)
 

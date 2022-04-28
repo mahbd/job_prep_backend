@@ -7,6 +7,13 @@
         <a href="{% url 'problems:mark_problem' problem.id 'solved' %}">Mark Solved</a>
         <a href="{% url 'problems:mark_problem' problem.id 'tried' %}">Mark Tried</a>
         {{ problem.status }}
+        <form action="{% url 'problems:add_problem_link' problem.id %}" method="post">
+            {% csrf_token %}
+            <span>Problem Link</span>
+            <input type="text" name="problem_link">
+            <input type="submit" value="Submit">
+        </form>
+        <a href="{{ problem.problem_link }}">{{ problem.problem_link }}</a>
         <h1 class="{% if problem.status == 'Tried' %} bg-danger {% elif problem.status == 'Confident' %} bg-success {% elif problem.status == 'Solved' %} bg-primary {% endif %}">{{ problem.name }}</h1>
         {{ problem.question_html|safe }}
     </div>
